@@ -6,10 +6,14 @@
 
 mexBBFMM3D is MATLAB interface for an open source package (BBFMM3D) of the <a href="http://www.sciencedirect.com/science/ article/pii/S0021999109004665">Black-box Fast Multipole Method</a> in 3 dimensions.   
 The Black-box Fast Multipole Method is an O(N) fast multipole method, which is a technique to calculate sums of the form  
- <img src="http://latex.codecogs.com/svg.latex? $f(x_i) = \displaystyle \sum_{j=1}^N K(x_i,y_j) \sigma_j, \,\,\, \forall i \in\{1,2,\ldots,N\}$ " border="0"/>  
-where <img src="http://latex.codecogs.com/svg.latex? $K(x_i,y_j)$" border="0"/> is kernel function, <img src="http://latex.codecogs.com/svg.latex? $x_i$" border="0"/> are observation points, <img src="http://latex.codecogs.com/svg.latex? $y_i$" border="0"/> are locations of sources, and <img src="http://latex.codecogs.com/svg.latex? $\sigma_i$" border="0"/> are charges at corresponding locations.
-BBFMM3D provides an O(N) solution to matrix-vector products of the type <img src="http://latex.codecogs.com/svg.latex? $Ax$" border="0"/>. In that case the relation between A and K is:
-<img src="http://latex.codecogs.com/svg.latex? $A_{ij} = K(x_i,y_j)$ " border="0"/>.
+
+![](http://latex.codecogs.com/gif.latex?f%28x_i%29%20%3D%20%5Cdisplaystyle%20%5Csum_%7Bj%3D1%7D%5EN%20K%28x_i%2Cy_j%29%20%5Csigma_j%2C%20%5C%2C%5C%2C%5C%2C%20%5Cforall%20i%20%5Cin%5C%7B1%2C2%2C%5Cldots%2CN%5C%7D)
+
+where ![](http://latex.codecogs.com/gif.latex?K%28x_i%2Cx_j%29) is kernel function, ![](http://latex.codecogs.com/gif.latex?x_i) are observation points, ![](http://latex.codecogs.com/gif.latex?y_j) are locations of sources, and ![](http://latex.codecogs.com/gif.latex?%5Csigma_i) are charges at corresponding locations.
+BBFMM3D provides an O(N) solution to matrix-vector products of the type Ax. In that case the relation between A and K is:
+![](http://latex.codecogs.com/gif.latex?A_%7Bij%7D%20%3D%20K%28x_i%2Cy_j%29)
+
+
 
 This implementation of the FMM differs from other methods by the fact that it is applicable to all smooth kernels K. [Give examples of RBF kernels, 1/r, log r, Stokes, etc.].
 
