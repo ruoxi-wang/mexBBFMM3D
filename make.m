@@ -1,11 +1,4 @@
 function make(var,kernel,homogen, symmetry, filename)
-% Produce mex file with 'filename' for the input kernel. File extension is automatically added. 
-% For each new kernel type, run this make file first before call mexFMM2D. 
-% The new kernel will be embedded in a new file 'kernelfun.hpp'
-
-% Usage:
-% syms r; f = exp(-abs(r)/30); filename = 'expfun';
-% make(r,f,filename)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%Main Function%%%%%%%
