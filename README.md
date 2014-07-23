@@ -113,12 +113,11 @@ If you want to compare it with exact computation:
 	[QH, QH_exact] = mexFMM3D(source, field,H,nCheb, level, L, use_chebyshev);
 
 
-
 ####3.3 Pre-computation
 
-The power of this package is in the pre-computing part, which is much more computationally expensive than computing part. This package takes advantage of the fact that for a given kernel and number of chebyshev nodes, the precomputing part is the same, so for a fixed kernel and number of chebyshev nodes, it generates 3 files storing information of FMM tree in the folder /output. Everytime when we use the same kernel type and number of chebyshev nodes, we can directly read from the files, which would save a lot of time.
+The power of this package is in the pre-computing part, which is much more computationally expensive than computing part. This package takes advantage of the fact that for a given kernel and number of chebyshev nodes, the precomputing part is the same, so for a fixed kernel and number of chebyshev nodes, it generates 3 files storing information of FMM tree in the folder *BBFMM3D/output/*. Everytime when we use the same kernel type and number of chebyshev nodes, we can directly read from the files, which would save a lot of time.
 
-Note: it is true that sometimes with the pre-computation step, the code will be slower than direct calculation. But if the file already exists, then when doing more computations it will be faster than direct calculation. If you change the kernel, make sure to delete the existed file in BBFMM3D/output/ before you run the code.
+Note: it is true that sometimes with the pre-computation step, the code will be slower than direct calculation. But if the file already exists, then when doing more computations it will be faster than direct calculation. If you change the kernel, make sure to delete the existed file in *BBFMM3D/output/* before you run the code.
 
 ###3.4
 
