@@ -1,0 +1,1 @@
+If you change the kernel or nCheb(number of chebyshev nodes per dimension), make sure to delete the corresponding existed binary files in the current folder before you run the code.
