@@ -10,20 +10,21 @@ homogen = -2;                    % K(ax, ay) = a^m K(x,y),=> homogen = m
 symmetry = 1;                    % symmetric: 1; non-symmetric: 0; 
                                  % anti-symmetric: 0
 make(r,kernel,homogen,symmetry,outputfile);
- 
+
 
 %% Example: Q*H
 
 % Info on dimensions
 Ns  = 10000;    % Number of sources in simulation cell
 Nf  = 10000;    % Number of fields in simulation cell
-m   = 2;        % number of columns of H
+m   = 1;        % number of columns of H
 L = 1.0;        % Length of simulation cell (assumed to be a cube)
 % 3-D locations, stored column-wise i.e. (x | y | z)
 
 source = (rand(Ns,3) - 0.5) .* L;
-% field = (rand(Nf,3) - 0.5) .* L; 
-field = source;
+field = (rand(Nf,3) - 0.5) .* L; 
+% field = source;
+
 
 H = rand(Ns,m); 
 
