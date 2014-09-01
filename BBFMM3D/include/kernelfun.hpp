@@ -1,10 +1,12 @@
 class myKernel: public H2_3D_Tree {
 public:
-    myKernel(doft* dof, double L, int level, int n,  double epsilon, int
-       use_chebyshev):H2_3D_Tree(dof,L,level,n, epsilon, use_chebyshev){};
-    virtual void setHomogen(string& kernelType) {
+    myKernel(double L, int level, int n,  double epsilon, int
+       use_chebyshev):H2_3D_Tree(L,level,n, epsilon, use_chebyshev){};
+    virtual void setHomogen(string& kernelType,doft*dof) {
        homogen = -2;
        symmetry = 1;
+       dof->f = 1;
+       dof->s = 1;
        kernelType = "myKernel";}
     virtual void EvaluateKernel(vector3 fieldpos, vector3 sourcepos,
                                double *K, doft *dof) {
