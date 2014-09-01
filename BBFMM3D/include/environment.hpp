@@ -1,6 +1,5 @@
 
 /*!	\file environment.hpp
-  Defines different types of kernel
 */
 #ifndef __environment_hpp__
 #define __environment_hpp__
@@ -15,6 +14,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <iostream>
+#include <map>
 
 
 #endif //(__environment_hpp__)
