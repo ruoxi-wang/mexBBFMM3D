@@ -113,7 +113,7 @@ void mexFunction(int nlhs,mxArray *plhs[], int nrhs, const mxArray *prhs[])  {
 
     /*****      Pre Computation     ******/
     clock_t  t0 = clock();
-    myKernel Atree(&dof,L,level, n, eps, use_chebyshev);
+    myKernel Atree(L,level, n, eps, use_chebyshev);
     Atree.buildFMMTree();
     clock_t t1 = clock();
     double tPre = t1 - t0;
@@ -141,7 +141,7 @@ void mexFunction(int nlhs,mxArray *plhs[], int nrhs, const mxArray *prhs[])  {
         QHexact_OUT = mxCreateDoubleMatrix(Nf*dof.f, m, mxREAL);
         double* stress_dir = mxGetPr(QHexact_OUT);
 
-        DirectCalc3D(&Atree, field, Nf, source, charges, m, Ns, &dof,0 , L, stress_dir);
+        DirectCalc3D(&Atree, field, Nf, source, charges, m, Ns, 0 , L, stress_dir);
         t1 = clock();
         double tExact = t1 - t0;
         mexPrintf("Exact computing time: %.4f\n",double(tExact) / double(CLOCKS_PER_SEC));
