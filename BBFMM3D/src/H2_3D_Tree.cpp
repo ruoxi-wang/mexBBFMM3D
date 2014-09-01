@@ -4,10 +4,9 @@
 
 #include"H2_3D_Tree.hpp"
 #include"bbfmm.h"
-#include"rfftw.h"
 
-H2_3D_Tree::H2_3D_Tree(doft *dof, double L, int level, int n,  double epsilon, int use_chebyshev){
-    this->dof   =   dof;
+H2_3D_Tree::H2_3D_Tree(double L, int level, int n,  double epsilon, int use_chebyshev){
+    this->dof = new doft;
     this->L     =   L;
     this->level =   level;
     this->n    =   n;
@@ -16,8 +15,6 @@ H2_3D_Tree::H2_3D_Tree(doft *dof, double L, int level, int n,  double epsilon, i
     alpha = 0;
     n2 = n*n;         // n2 = n^2
 	n3 = n2*n;       // n3 = n^3
-	dofn3_s = dof->s * n3;
-	dofn3_f = dof->f * n3;
     
     // Omega matrix
 	Kweights = (double *)malloc(n3 * sizeof(double));    
@@ -43,6 +40,8 @@ void H2_3D_Tree::buildFMMTree() {
 			 n,epsilon,dof,level,Kmat,
              Umat,Vmat,&Ucomp,&Vcomp, skipLevel, alpha, use_chebyshev,
              p_r2c);
+     dofn3_s = dof->s * n3;
+     dofn3_f = dof->f * n3;
     
     int preCompLevel = (level-2)* (!homogen) + 1;
     int Ksize = cutoff.f * (316*cutoff.s)* preCompLevel; // Change: set cutoff
@@ -69,17 +68,20 @@ void H2_3D_Tree::FMMSetup(nodeT **A, double *Tkz,  double *Kweights,
                           p_r2c) {
     
 	vector3 center;
-    setHomogen(kernelType);
+    setHomogen(kernelType,dof);
     homogen = -homogen;
     
     if (use_chebyshev) {
-        sprintf(Kmat,"./BBFMM3D/output/%sCK%d.bin",kernelType.c_str(),n);
-        sprintf(Umat,"./BBFMM3D/output/%sCU%d.bin",kernelType.c_str(),n);
-        sprintf(Vmat,"./BBFMM3D/output/%sCV%d.bin",kernelType.c_str(),n);
+       // sprintf(Kmat,"./../output/%sCK%d.bin",kernelType.c_str(),n);
+       // sprintf(Umat,"./../output/%sCU%d.bin",kernelType.c_str(),n);
+       // sprintf(Vmat,"./../output/%sCV%d.bin",kernelType.c_str(),n);
+       sprintf(Kmat,"./BBFMM3D/output/%sCK%d.bin",kernelType.c_str(),n);
+       sprintf(Umat,"./BBFMM3D/output/%sCU%d.bin",kernelType.c_str(),n);
+       sprintf(Vmat,"./BBFMM3D/output/%sCV%d.bin",kernelType.c_str(),n);
     } else {
-        sprintf(Kmat,"./BBFMM3D/output/%sUK%d.bin",kernelType.c_str(),n);
-        sprintf(Umat,"./BBFMM3D/output/%sUU%d.bin",kernelType.c_str(),n);
-        sprintf(Vmat,"./BBFMM3D/output/%sUV%d.bin",kernelType.c_str(),n);
+sprintf(Kmat,"./BBFMM3D/output/%sCK%d.bin",kernelType.c_str(),n);
+       sprintf(Umat,"./BBFMM3D/output/%sCU%d.bin",kernelType.c_str(),n);
+       sprintf(Vmat,"./BBFMM3D/output/%sCV%d.bin",kernelType.c_str(),n);
     }
     
     // Compute the Chebyshev weights and sets up the lookup table
@@ -215,53 +217,61 @@ void H2_3D_Tree::FMMSetup(nodeT **A, double *Tkz,  double *Kweights,
  * vectors U.
  */
 void H2_3D_Tree::FMMReadMatrices(double *K, double *U, double *VT, doft *cutoff, int n, doft *dof,char *Kmat, char *Umat, char *Vmat, int treeLevel, double homogen, int skipLevel, int use_chebyshev) {
-	int i = 0;
+    int i = 0;
     FILE *ptr_file;
     int preCompLevel = (treeLevel-2)* (!homogen) + 1;
-    
+     
     int Ksize;
-    if(use_chebyshev)
-        Ksize = cutoff->f * (316*cutoff->s); // Change: set cutoff
-	else
-	    Ksize = 316*(2*n-1)*(2*n-1)*(2*n-1)*dof->s*dof->f;
-
     int Usize = cutoff->f * dof->f *n*n*n;
     int Vsize = cutoff->s * dof->s *n*n*n;
-	
-    // Read in kernel interaction matrix K
-    ptr_file = fopen(Kmat,"rb");
-    fseek(ptr_file, (1*sizeof(int) + 1*sizeof(double)) *(!homogen) +
-          Ksize *skipLevel *sizeof(double), SEEK_SET);
-    i += fread(K, sizeof(double), Ksize *preCompLevel, ptr_file);
-    fclose(ptr_file);
-    
-    
-    if (use_chebyshev) {
-        // Read in matrix of singular vectors U
-        ptr_file = fopen(Umat,"rb");
-        fseek(ptr_file, 1*sizeof(int) + Usize *skipLevel *sizeof(double),
-              SEEK_SET);
-        i += fread(U, sizeof(double), Usize *preCompLevel, ptr_file);
-        fclose(ptr_file);
-        
-        // Read in matrix of singular vectors VT
-        ptr_file = fopen(Vmat,"rb");
-        fseek(ptr_file, 1*sizeof(int) + Vsize *skipLevel *sizeof(double),
-              SEEK_SET);
-        i += fread(VT, sizeof(double), Vsize *preCompLevel, ptr_file);
-        fclose(ptr_file);
-        
-        int totleNum = (Ksize + Usize + Vsize) *preCompLevel;
-        if (i != totleNum)
-            printf("fread error in FMMReadMatrices!\n Expected numer:%d,"
-                   "numbers read: %d\n", totleNum, i);
 
+    if(!use_chebyshev) { // TODO: non-homogeneous case
+
+      Ksize = 316*(2*n-1)*(2*n-1)*(2*n-1)*dof->s*dof->f;
+      //printf("Ksize: %d\n", Ksize);
+
+      
+      ptr_file = fopen(Kmat,"rb");
+      assert(ptr_file != NULL);
+     
+      i = fread(K, sizeof(double), Ksize, ptr_file);
+      assert(i == Ksize);
+      fclose(ptr_file);
+     
     } else {
-        int totleNum = Ksize *preCompLevel;
-        if (i != totleNum)
-            printf("fread error in FMMReadMatrices!\n Expected numer:%d,"
-                   "numbers read: %d\n", totleNum, i);
+
+      Ksize = cutoff->f * (316*cutoff->s);
+     
+      // Read in kernel interaction matrix K
+      ptr_file = fopen(Kmat,"rb");
+      fseek(ptr_file, (1*sizeof(int) + 1*sizeof(double)) *(!homogen) +
+        Ksize *skipLevel *sizeof(double), SEEK_SET);
+      i += fread(K, sizeof(double), Ksize *preCompLevel, ptr_file);
+      fclose(ptr_file);
+
+      // Read in matrix of singular vectors U
+      ptr_file = fopen(Umat,"rb");
+      fseek(ptr_file, 1*sizeof(int) + Usize *skipLevel *sizeof(double),
+        SEEK_SET);
+      i += fread(U, sizeof(double), Usize *preCompLevel, ptr_file);
+      fclose(ptr_file);
+    
+      // Read in matrix of singular vectors VT
+      ptr_file = fopen(Vmat,"rb");
+      fseek(ptr_file, 1*sizeof(int) + Vsize *skipLevel *sizeof(double),
+        SEEK_SET);
+      i += fread(VT, sizeof(double), Vsize *preCompLevel, ptr_file);
+      fclose(ptr_file);
+
+      int totleNum = (Ksize + Usize + Vsize) *preCompLevel;
+      if (i != totleNum) {
+         printf("fread error in FMMReadMatrices!\n Expected numer:%d,"
+            "numbers read: %d\n", totleNum, i);
+     assert(i == totleNum);
+      }
+     
     }
+
 }
 
 /*
@@ -276,8 +286,12 @@ void H2_3D_Tree::FMMReadMatrices(double *K, double *U, double *VT, doft *cutoff,
 
 void H2_3D_Tree::ComputeKernelSVD(double *Kweights, int n,double epsilon, doft *dof, char*Kmat, char *Umat, char *Vmat, int symm,  double *Ucomp,double *Vcomp, double alphaAdjust, double boxLen) {
     
-    static int callTime = -1;
-    callTime += 1; // callTime = 0 for the first time called
+    // static int callTime = -1;
+    // callTime += 1; // callTime = 0 for the first time called
+
+    static std::map<char*, int> callTime;
+    callTime.insert(std::make_pair(Umat, -1));
+    callTime[Umat] += 1; // callTime = 0 for the first time called
     
     int i, j, l, m, m1, k1, k2, k3, l1, l2, l3, z;
     int count, count1, count2, count3;
@@ -411,9 +425,9 @@ void H2_3D_Tree::ComputeKernelSVD(double *Kweights, int n,double epsilon, doft *
 	
     // Compute the SVD of K0
     char save[]="S", nosave[]="N";
-    int nosavedim=1;
-    int info, lwork;
-    int cols_s = 316*dofn3_s;
+    long int nosavedim=1;
+    long int info, lwork;
+    long int cols_s = 316*dofn3_s;
 	
     /* See dgesvd documentation:
      *          LWORK >= MAX(1,5*MIN(M,N)) for the paths (see comments inside code):
@@ -430,14 +444,13 @@ void H2_3D_Tree::ComputeKernelSVD(double *Kweights, int n,double epsilon, doft *
     Sigma      = (double *)malloc(Sigma_size * sizeof(double));
     U0         = (double *)malloc(U0size * sizeof(double));
     VT0        = NULL;
-    
-    dgesvd_(save, nosave, &dofn3_f, &cols_s, K0, &dofn3_f, Sigma, U0,
-            &dofn3_f, VT0, &nosavedim, work, &lwork, &info);
-    
+    long int tmp_doff = dofn3_f;
+    dgesvd_(save, nosave, &tmp_doff, &cols_s, K0, &tmp_doff, Sigma, U0,
+            &tmp_doff, VT0, &nosavedim, work, &lwork, &info);
     FILE *ptr_file;
     
     double sumsqr, sum, epsqr;
-    if (callTime == 0) { // The first time called
+    if (callTime[Umat] == 0) { // The first time called
         
         // Determine the number of singular values to keep. We use epsilon for this.
         sumsqr = 0;
@@ -456,8 +469,9 @@ void H2_3D_Tree::ComputeKernelSVD(double *Kweights, int n,double epsilon, doft *
         
         // Extract the needed columns from U0 and write out to a file
         ptr_file = fopen(Umat,"wb");
-        
-        fwrite(&cutoff.f, sizeof(int), 1, ptr_file);
+
+        assert(ptr_file != NULL);
+	fwrite(&cutoff.f, sizeof(int), 1, ptr_file);
         fclose(ptr_file);
     }
     else {
@@ -498,16 +512,17 @@ void H2_3D_Tree::ComputeKernelSVD(double *Kweights, int n,double epsilon, doft *
 	
     // save = "S"; nosave = "N"
     double *U1 = NULL;
-    int rows_f = 316*dofn3_f;
+    long int rows_f = 316*dofn3_f;
     Sigma_size = dofn3_s;
     Sigma      = (double *)malloc(Sigma_size * sizeof(double));
     VT0        = (double *)malloc(dofn3_s * dofn3_s * sizeof(double));
     
     // Compute the SVD of the K_thin
-    dgesvd_(nosave,save,&rows_f,&dofn3_s,K0,&rows_f,Sigma,U1,&nosavedim,VT0,&dofn3_s,
+    long int tmp_dofs = dofn3_s;    
+dgesvd_(nosave,save,&rows_f,&tmp_dofs,K0,&rows_f,Sigma,U1,&nosavedim,VT0,&tmp_dofs,
             work,&lwork,&info);
     
-    if (callTime == 0) {
+    if (callTime[Umat] == 0) {
         
         // Determine the number of singular values to keep. We use
         // epsilon for this.
@@ -576,8 +591,9 @@ void H2_3D_Tree::ComputeKernelSVD(double *Kweights, int n,double epsilon, doft *
          */
         transa[0] = 'n';
         transb[0] = 't';
-        dgemm_(transa, transb, &dofn3_f, &cutoff.s, &dofn3_s, &alpha, 
-               Kcell[i], &dofn3_f, VT0, &dofn3_s, &beta, KV, &dofn3_f);
+        long int tmp_doff = dofn3_f, tmp_dofs = dofn3_s,tmp_cuts = cutoff.s,tmp_cutf = cutoff.f;
+        dgemm_(transa, transb, &tmp_doff, &tmp_cuts, &tmp_dofs, &alpha, 
+               Kcell[i], &tmp_doff, VT0, &tmp_dofs, &beta, KV, &tmp_doff);
 		
         /* Compute U^T K V:
          * KV is dofn3_f x cutoff.s
@@ -588,13 +604,12 @@ void H2_3D_Tree::ComputeKernelSVD(double *Kweights, int n,double epsilon, doft *
          */
         transa[0] = 't';
         transb[0] = 'n';
-        dgemm_(transa, transb, &cutoff.f, &cutoff.s, &dofn3_f, &alpha, 
-               U0, &dofn3_f, KV, &dofn3_f, &beta, Ecell, &cutoff.f);
+        dgemm_(transa, transb, &tmp_cutf, &tmp_cuts, &tmp_doff, &alpha, 
+               U0, &tmp_doff, KV, &tmp_doff, &beta, Ecell, &tmp_cutf);
 		
         fwrite(Ecell, sizeof(double), cutoff2, ptr_file);
     }
     fclose(ptr_file);
-    
     free(K0);
     free(VT0);
     free(U0);

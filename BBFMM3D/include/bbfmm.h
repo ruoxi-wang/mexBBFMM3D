@@ -116,22 +116,22 @@ extern void dgeev_(char *jobvl, char *jobvr, int *n, double *A, int *lda,
         int *ldvr, double *work, int *lwork, int *info);
 
 	// Declaration for LAPACK's SVD routine
-extern void dgesvd_(char *jobu, char *jobvt, int *m, int *n, double *A,
-					int *lda, double *S, double *U, int *ldu, double *VT,
-					int *ldvt, double *work, int *lwork, int *info);
+extern void dgesvd_(char *jobu, char *jobvt, long int *m, long int *n, double *A,
+					long int *lda, double *S, double *U, long int *ldu, double *VT,
+					long int *ldvt, double *work, long int *lwork, long int *info);
 
 	// Declaration for BLAS matrix-matrix multiply
-extern void dgemm_(char *transa, char *transb, int *m, int *n, int *k,
-				   double *alpha, double *A, int *lda, double *B,
-				   int *ldb, double *beta, double *C, int *ldc);
+extern void dgemm_(char *transa, char *transb, long int *m, long int *n, long int *k,
+				   double *alpha, double *A, long int *lda, double *B,
+				   long int *ldb, double *beta, double *C, long int *ldc);
 
 	// Declaration for BLAS matrix-vector multiply
-extern void dgemv_(char *trans, int *m, int *n, double *alpha, double *A,
-				   int *lda, double *x, int *incx, double *beta, 
-				   double *y, int *incy);
+extern void dgemv_(char *trans, long int *m, long int *n, double *alpha, double *A,
+				   long int *lda, double *x, long int *incx, double *beta, 
+				   double *y, long int *incy);
 
 	// Declaration for BLAS dot product
-extern double ddot_(int *n, double *dx, int *incx, double *dy, int *incy);
+extern double ddot_(long int *n, double *dx, long int *incx, double *dy, long int *incy);
 
 	// Declaration for BLAS daxpy
 extern double daxpy_(int *n, double *da, double *dx, int *incx, double *dy,

@@ -1,6 +1,5 @@
 
 /*!	\file test.hpp
-  Defines different types of kernel
 */
 #ifndef __test_hpp__
 #define __test_hpp__
@@ -18,12 +17,15 @@
  */
 template<typename T>
 void DirectCalc3D(T* FMMtree, vector3 *field, int Nf, vector3 *source, double *q, int m,
-                  int Ns, doft *dof, int lpbc, double L,
+                  int Ns, int lpbc, double L,
                   double *phi) {
 
     int i, j, l1, l2, l3, begGlobal,k;
-    int dof2 = dof->f * dof->s;
+    doft* dof = new doft;
+    dof->f = FMMtree->dof->f;
+    dof->s = FMMtree->dof->s;
     int dof_f = dof->f, dof_s = dof->s;
+    int dof2 = dof_f * dof_s;
     vector3 sourcepos, cshift;
     char trans[] = "n";
     double alpha = 1;
@@ -77,9 +79,9 @@ void DirectCalc3D(T* FMMtree, vector3 *field, int Nf, vector3 *source, double *q
                         Kij[k] = 0;
                     }
                 }
-
+                long int tmp_doff = dof_f, tmp_dofs = dof_s, tmp_incr = incr;
                 for (k = 0; k < m; k++) {
-                    dgemv_(trans,&dof_f,&dof_s,&alpha,Kij,&dof_f,q+Ns*dof_s*k+dof_s*j,&incr,&alpha,phi+Nf*dof_f*k+dof_f*i,&incr);
+                    dgemv_(trans,&tmp_doff,&tmp_dofs,&alpha,Kij,&tmp_doff,q+Ns*tmp_dofs*k+tmp_dofs*j,&tmp_incr,&alpha,phi+Nf*tmp_doff*k+tmp_doff*i,&tmp_incr);
 
                 }
 
