@@ -82,7 +82,7 @@ H2_3D_Compute<T>::H2_3D_Compute(T * FMMTree,vector3 * field, vector3 *source, in
                    FMMTree->homogen,&FMMTree->cutoff,FMMTree->n,FMMTree->dof,&stress[i*Nf*FMMTree->dof->f], FMMTree->use_chebyshev,FMMTree->p_r2c, FMMTree->p_c2r);
     }
     FMMTree->computed = true;
-
+    
 }
 
 /*
@@ -410,8 +410,9 @@ void H2_3D_Compute<T>::FMMInteraction(nodeT **A, double *E, int *Ktable, double 
 
 
     // Compute the field values at the field Chebyshev nodes M2L
+    long int tmp_dofn3f = dofn3_f, tmp_cutoff_f = cutoff_f,tmp_incr = incr;
     if( use_chebyshev ) {
-	    dgemv_(trans,&dofn3_f,&cutoff_f,&scale,U+Usize*shift,&dofn3_f,Pf,&incr,&beta,F,&incr);  // 3c
+	    dgemv_(trans,&tmp_dofn3f,&tmp_cutoff_f,&scale,U+Usize*shift,&tmp_dofn3f,Pf,&tmp_incr,&beta,F,&tmp_incr);  // 3c
         
 	    // Adjust the field values by the appropriate weight
 	    l = 0;
@@ -534,7 +535,7 @@ void H2_3D_Compute<T>::DownwardPass(nodeT **A, vector3 *field, vector3 *source,
             }
         }
         
-        // Due to near field interactions
+        // Due to near field interactions (comment out if you want to substract P2P interactions)
         for (m=0;m<nneigh;m++) {
             B = (*A)->neighbors[m];
             sourcelist = B->sourcelist;
@@ -626,7 +627,8 @@ void H2_3D_Compute<T>::EvaluateField(vector3 *field, vector3 *source, double *q,
 	double alpha = 1, beta = 0;
     int incr = 1;
 	char trans[] = "n";
-	dgemv_(trans, &LDA, &N, &alpha, Kcell, &LDA, q, &incr, &beta, fieldval, &incr);
+        long int tmp_LDA = LDA, tmp_N = N,tmp_incr = incr;
+	dgemv_(trans, &tmp_LDA, &tmp_N, &alpha, Kcell, &tmp_LDA, q, &tmp_incr, &beta, fieldval, &tmp_incr);
     
 	free(Kcell);
     Kcell = NULL;
@@ -677,7 +679,7 @@ void H2_3D_Compute<T>::Local2Local(int n, double *r, double *F, double *Fchild, 
 	    wstart = 0;
 	else
 	    wstart = n2;
-    
+   long int tmp_dofn2 = dofn2,tmp1_n = n; 
     for (l1=0;l1<n;l1++) {
 		count2 = wstart + l1;
 		for (l2=0;l2<n;l2++) {
@@ -685,7 +687,7 @@ void H2_3D_Compute<T>::Local2Local(int n, double *r, double *F, double *Fchild, 
                 count1 = l2*n + l3;
                 for (l4=0;l4<dof->f;l4++) {
 		            count3 = dof->f*count1 + l4;
-                    Fx[l]  = ddot_(&n,&F[count3],&dofn2,&Cweights[count2],&n);
+                    Fx[l]  = ddot_(&tmp1_n,&F[count3],&tmp_dofn2,&Cweights[count2],&tmp1_n);
                     l++;
                 }
 		    }
@@ -698,7 +700,7 @@ void H2_3D_Compute<T>::Local2Local(int n, double *r, double *F, double *Fchild, 
         wstart = 0;
     else
         wstart = n2;
-    
+   long int tmp_dofn = dofn,tmp2_n = n; 
     for (l1=0;l1<n;l1++) {
         for (l2=0;l2<n;l2++) {
             count2 = wstart + l2;
@@ -706,7 +708,7 @@ void H2_3D_Compute<T>::Local2Local(int n, double *r, double *F, double *Fchild, 
                 count1 = l1*n2 + l3;
                 for (l4=0;l4<dof->f;l4++) {
                     count3 = dof->f*count1 + l4;
-                    Fy[l] = ddot_(&n,&Fx[count3],&dofn,&Cweights[count2],&n);
+                    Fy[l] = ddot_(&tmp2_n,&Fx[count3],&tmp_dofn,&Cweights[count2],&tmp2_n);
                     l++;
                 }
             }
@@ -720,14 +722,14 @@ void H2_3D_Compute<T>::Local2Local(int n, double *r, double *F, double *Fchild, 
         wstart = 0;
     else
         wstart = n2;
-    
+    long int tmp_doff = dof->f,tmp3_n = n;
     for (l1=0;l1<n2;l1++) {
         count1 = l1*n;
         for (l3=0;l3<n;l3++) {
             count2 = wstart + l3;
             for (l4=0;l4<dof->f;l4++) {
                 count3 = dof->f*count1 + l4;
-				Fchild[l] += prefac3*ddot_(&n,&Fy[count3],&(dof->f), &Cweights[count2],&n);
+				Fchild[l] += prefac3*ddot_(&tmp3_n,&Fy[count3],&tmp_doff, &Cweights[count2],&tmp3_n);
 				l++;
             }
         }
@@ -771,8 +773,9 @@ void H2_3D_Compute<T>::Moment2Local(int n, double *R, double *cell_mpCoeff, doub
      *       'CompCoeff' can be used directly
      */
     double CompCoeff[cutoff_s];
+    long int tmp_dofn3 = dofn3, tmp_cutoffs = cutoff_s,tmp_incr = incr;
     if(use_chebyshev) {
-        dgemv_(&trans,&cutoff_s,&dofn3,&alpha,VT,&cutoff_s,Sw,&incr,&beta,CompCoeff,&incr);
+        dgemv_(&trans,&tmp_cutoffs,&tmp_dofn3,&alpha,VT,&tmp_cutoffs,Sw,&tmp_incr,&beta,CompCoeff,&tmp_incr);
     }
 
     
@@ -790,9 +793,10 @@ void H2_3D_Compute<T>::Moment2Local(int n, double *R, double *cell_mpCoeff, doub
     // cutoff: cutoff on the number of SVD values,
     // Ecell : M2L operator - E[count] : precalculated, P input, M expansion Output : Pf L expansion
     // CHANGE0731: no 'Ecell' used
+    long int tmp_cutofff = cutoff_f;
     if(use_chebyshev) {
-        dgemv_(&trans, &cutoff_f, &cutoff_s, &alpha, E+count, &cutoff_f,
-               CompCoeff, &incr, &beta,FFCoeff,&incr); // 3b  Ecell is the kernel
+        dgemv_(&trans, &tmp_cutofff, &tmp_cutoffs, &alpha, E+count, &tmp_cutofff,
+               CompCoeff, &tmp_incr, &beta,FFCoeff,&tmp_incr); // 3b  Ecell is the kernel
     }
     else {
         
@@ -874,13 +878,14 @@ void H2_3D_Compute<T>::Moment2Moment(int n, double *r, double *Schild, double *S
 	    wstart =  n2;
     
     l = 0;
+    long int tmp_n = n, tmp_dofs = dof->s, tmp_incr = incr;
     for (l1=0;l1<n2;l1++) {
 	    count1 = l1*n;
 	    for (l3=0;l3<n;l3++) {
             count2 = wstart + l3*n;
 	        for (l4=0;l4<dof->s;l4++) {
                 count3 = dof->s*count1 + l4;
-                Sz[l]  = ddot_(&n,&Schild[count3],&(dof->s),&Cweights[count2],&incr);
+                Sz[l]  = ddot_(&tmp_n,&Schild[count3],&tmp_dofs,&Cweights[count2],&tmp_incr);
                 l++;
 	        }
 	    }
@@ -893,6 +898,7 @@ void H2_3D_Compute<T>::Moment2Moment(int n, double *r, double *Schild, double *S
         wstart =  n2;
     
     l = 0;
+    long int tmp_dofn = dofn;
     for (l1=0;l1<n;l1++) {
         for (l2=0;l2<n;l2++) {
             count2 = wstart + l2*n;
@@ -900,7 +906,7 @@ void H2_3D_Compute<T>::Moment2Moment(int n, double *r, double *Schild, double *S
                 count1 = l1*n2 + l3;
                 for (l4=0;l4<dof->s;l4++) {
                     count3 = dof->s*count1 + l4;
-                    Sy[l]  = ddot_(&n,&Sz[count3],&dofn,&Cweights[count2],&incr);
+                    Sy[l]  = ddot_(&tmp_n,&Sz[count3],&tmp_dofn,&Cweights[count2],&tmp_incr);
                     l++;
                 }
             }
@@ -914,7 +920,7 @@ void H2_3D_Compute<T>::Moment2Moment(int n, double *r, double *Schild, double *S
         wstart =  0;
     else
         wstart =  n2;
-    
+    long int tmp_dofn2 = dofn2;    
     for (l1=0;l1<n;l1++) {
         count2 = wstart + l1*n;
         for (l2=0;l2<n;l2++) {
@@ -922,7 +928,7 @@ void H2_3D_Compute<T>::Moment2Moment(int n, double *r, double *Schild, double *S
                 count1 = l2*n + l3;
                 for (l4=0;l4<dof->s;l4++) {
                     count3  = dof->s*count1 + l4;
-                    SS[l] = ddot_(&n,&Sy[count3],&dofn2,&Cweights[count2],&incr);
+                    SS[l] = ddot_(&tmp_n,&Sy[count3],&tmp_dofn2,&Cweights[count2],&tmp_incr);
                     l++;
                 }
             }
