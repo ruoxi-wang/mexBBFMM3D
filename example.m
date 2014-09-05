@@ -4,7 +4,6 @@ delete('./*.o');
 delete('./BBFMM3D/output/*.bin'); % make sure to delete output file if kernel is changed
 syms r;                           % distance of two points (radius)
 kernel = 1 ./ r.^2;               % radius basis function 
-% kernel = exp(-r^2);
 outputfile = 'mexFMM3D';
 homogen = -2;                    % K(ax, ay) = a^m K(x,y),=> homogen = m
 symmetry = 1;                    % symmetric: 1; non-symmetric: 0; 

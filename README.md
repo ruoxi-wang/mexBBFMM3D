@@ -98,9 +98,9 @@ This is a sample problem, make sure your points stay in the cell of length L.
 * nCheb:  
 	Number of Chebyshev nodes per dimension ( the larger nCheb is, the better accuracy it will achive)
 * use_chebyshev(int):  
-	Label to indicate whether using chebyshev frame or uniform frame.  
-	use_chebyshev = 1: chebyshev interplation frame (recommended if there is no memory concern)
-	use_chebyshev = 0: uniform frame.
+	Label to indicate whether using chebyshev interpolation formula or uniform interpolation formula.  
+	use_chebyshev = 1: chebyshev interplation formula (recommended if there is no memory concern)
+	use_chebyshev = 0: uniform interpolation formula.
 
 
 
